@@ -4,7 +4,6 @@
     [cljsbin.middleware :refer [wrap-defaults]]
     [cljsbin.routes :refer [router]]
     [macchiato.server :as http]
-    [macchiato.session.memory :as mem]
     [mount.core :as mount :refer [defstate]]
     [taoensso.timbre :refer-macros [log trace debug info warn error fatal]]))
 
