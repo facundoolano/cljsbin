@@ -41,7 +41,6 @@
       (concat-body (:body request)
        (fn [body]
          (let [json-body (js->clj (js/JSON.parse body))]
-           (println "HOLHOLHO1" body)
            (-> request
                (assoc :json json-body)
                (assoc :body body) ;; not sure why this is needed, should be set by the other mw
