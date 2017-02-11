@@ -32,15 +32,18 @@
   (if-let [type (util/content-type request)]
     (.startsWith type "application/json")))
 
+;; TODO error should be 400 if payload is badly formatted
 (defn wrap-json-body
   "If the request has json content-type, attempt to parse the body and
   set it in the :json property of the request."
   [handler]
   (fn [request respond raise]
     (if (json-request? request)
-      (concat-body (:body request)
+      (concat-body
+       (:body request)
        (fn [body]
-         (let [json-body (js->clj (js/JSON.parse body))]
+         (if-let [json-body (try (js->clj (js/JSON.parse body))
+                                 (catch js/Error e (raise e)))]
            (-> request
                (assoc :json json-body)
                (assoc :body body) ;; not sure why this is needed, should be set by the other mw

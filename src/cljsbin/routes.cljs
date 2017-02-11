@@ -89,6 +89,22 @@
 (def patch "Returns PATCH data." body-data)
 (def delete "Returns DELETE data." body-data)
 
+(defn status
+  "Returns given HTTP Status code."
+  [req res raise]
+  (let [status-code (js/parseInt (get-in req [:route-params :status]))]
+    (if (integer? status-code)
+      (res {:body "" :status status-code})
+      (raise (js/Error "Not a valid status code.")))))
+
+(defn delay
+  "Delays responding for min(n, 10) seconds."
+  [req res raise]
+  (let [seconds (js/parseInt (get-in req [:route-params :n]))]
+    (if (and (integer? seconds) (> seconds 0) (< seconds 10))
+      (js/setTimeout #(res (r/ok "")) (* seconds 1000))
+      (raise (js/Error "Not a valid number of seconds.")))))
+
 (def routes
   ["" {"/" {:get home}
        "/ip" {:get ip}
@@ -98,7 +114,9 @@
        "/post" {:post post}
        "/put" {:put put}
        "/patch" {:patch patch}
-       "/delete" {:delete delete}}])
+       "/delete" {:delete delete}
+       ["/status/" :status] {:get status}
+       ["/delay/" :n] {:get delay}}])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
