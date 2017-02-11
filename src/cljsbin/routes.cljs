@@ -97,7 +97,17 @@
       (res {:body "" :status status-code})
       (raise (js/Error "Not a valid status code.")))))
 
-(defn delay
+(defn response-headers
+  "Returns given response headers."
+  [req res raise]
+  (let [base-response (-> {}
+                          (r/ok)
+                          (r/content-type "application/json"))
+        response (update-in base-response [:headers] merge (:query-params req))
+        response (assoc response :body (:headers response))]
+    (res response)))
+
+(defn delay_
   "Delays responding for min(n, 10) seconds."
   [req res raise]
   (let [seconds (js/parseInt (get-in req [:route-params :n]))]
@@ -116,7 +126,8 @@
        "/patch" {:patch patch}
        "/delete" {:delete delete}
        ["/status/" :status] {:get status}
-       ["/delay/" :n] {:get delay}}])
+       ["/delay/" :n] {:get delay_}
+       "/response-headers" {:get response-headers}}])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
