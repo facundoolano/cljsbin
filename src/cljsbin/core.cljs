@@ -1,7 +1,7 @@
 (ns cljsbin.core
   (:require
     [cljsbin.config :refer [env]]
-    [cljsbin.middleware :refer [wrap-defaults]]
+    [cljsbin.middleware :refer [wrap-defaults wrap-set-body wrap-json-body]]
     [cljsbin.routes :refer [router]]
     [macchiato.server :as http]
     [mount.core :as mount :refer [defstate]]
@@ -12,10 +12,13 @@
   (let [host (or (:host @env) "127.0.0.1")
         port (or (some-> @env :port js/parseInt) 3000)]
     (http/start
-      {:handler    (wrap-defaults router)
-       :host       host
-       :port       port
-       :on-success #(info "cljsbin started on" host ":" port)})))
+     {:handler    (-> router
+                      (wrap-set-body)
+                      (wrap-json-body)
+                      (wrap-defaults))
+      :host       host
+      :port       port
+      :on-success #(info "cljsbin started on" host ":" port)})))
 
 (defn start-workers [cluster]
   (let [os (js/require "os")]
