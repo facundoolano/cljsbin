@@ -16,6 +16,7 @@
                       (wrap-set-body)
                       (wrap-json-body)
                       (wrap-defaults))
+      :cookies {:signed? false} ;; for some reason this is needed to see cookie values
       :host       host
       :port       port
       :on-success #(info "cljsbin started on" host ":" port)})))

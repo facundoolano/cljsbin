@@ -107,6 +107,12 @@
         response (assoc response :body (:headers response))]
     (res response)))
 
+(def cookies "Return cookie data."
+  (json-handler (fn [req]
+                  (let [flat-cookie (fn [[k v]] [k (:value v)])
+                        flattened (into {} (map flat-cookie (:cookies req)))]
+                    {:cookies flattened}))))
+
 (defn delay_
   "Delays responding for min(n, 10) seconds."
   [req res raise]
@@ -127,7 +133,8 @@
        "/delete" {:delete delete}
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
-       "/response-headers" {:get response-headers}}])
+       "/response-headers" {:get response-headers}
+       "/cookies" {:get cookies}}])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
