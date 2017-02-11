@@ -107,11 +107,37 @@
         response (assoc response :body (:headers response))]
     (res response)))
 
+(defn flatten-cookies
+  "Flatten the {:value} structure in the cookies."
+  [cookies]
+  (into {} (map (fn [[k v]] [k (:value v)]) cookies)))
+
 (def cookies "Return cookie data."
-  (json-handler (fn [req]
-                  (let [flat-cookie (fn [[k v]] [k (:value v)])
-                        flattened (into {} (map flat-cookie (:cookies req)))]
-                    {:cookies flattened}))))
+  (json-handler (fn [req] {:cookies (flatten-cookies (:cookies req))})))
+
+;; TODO should use json-handler once its apdated
+(defn set-cookies
+  "Sets one or more simple cookies."
+  [req res raise]
+  (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
+                                 (:query-params req)))]
+    (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
+        (r/ok)
+        (r/content-type "application/json")
+        (assoc :cookies cookie-map)
+        (res))))
+
+;; TODO should use json-handler once its apdated
+(defn delete-cookies
+  "Deletes one or more simple cookies."
+  [req res raise]
+  (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
+        remaining (apply dissoc (:cookies req) (keys remove-map))]
+    (-> {:cookies (flatten-cookies remaining)}
+        (r/ok)
+        (r/content-type "application/json")
+        (assoc :cookies remove-map)
+        (res))))
 
 (defn delay_
   "Delays responding for min(n, 10) seconds."
@@ -134,7 +160,9 @@
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
        "/response-headers" {:get response-headers}
-       "/cookies" {:get cookies}}])
+       "/cookies" {:get cookies}
+       "/cookies/set" {:get set-cookies}
+       "/cookies/delete" {:get delete-cookies}}])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
