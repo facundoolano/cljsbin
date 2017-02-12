@@ -89,6 +89,20 @@
 (def patch "Returns PATCH data." body-data)
 (def delete "Returns DELETE data." body-data)
 
+(defn encoding
+  "Returns page containing UTF-8 data."
+  [req res next]
+  (-> (r/file "./public/UTF-8-demo.txt")
+   (r/content-type "text/html")
+   (res)))
+
+(defn xml
+  "Returns some XML."
+  [req res next]
+  (-> (r/file "./public/sample.xml")
+      (r/content-type "application/xml")
+      (res)))
+
 (defn status
   "Returns given HTTP Status code."
   [req res raise]
@@ -115,7 +129,7 @@
 (def cookies "Return cookie data."
   (json-handler (fn [req] {:cookies (flatten-cookies (:cookies req))})))
 
-;; TODO should use json-handler once its apdated
+;; FIXME should use json-handler once its adapted
 (defn set-cookies
   "Sets one or more simple cookies."
   [req res raise]
@@ -127,7 +141,7 @@
         (assoc :cookies cookie-map)
         (res))))
 
-;; TODO should use json-handler once its apdated
+;; FIXME should use json-handler once its adapted
 (defn delete-cookies
   "Deletes one or more simple cookies."
   [req res raise]
@@ -195,6 +209,8 @@
        "/put" {:put put}
        "/patch" {:patch patch}
        "/delete" {:delete delete}
+       "/encoding/utf8" {:get encoding}
+       "/xml" {:get xml}
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
        "/response-headers" {:get response-headers}
