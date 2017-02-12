@@ -147,6 +147,44 @@
       (js/setTimeout #(res (r/ok "")) (* seconds 1000))
       (raise (js/Error "Not a valid number of seconds.")))))
 
+(defn image-response
+  [accept-value res]
+  "Send an image response based on the given accept-value."
+  (let [accept-map {"image/svg+xml" "./public/images/svg_logo.svg"
+                    "image/webp" "./public/images/wolf_1.webp"
+                    "image/png" "./public/images/pig_icon.png"
+                    "image/jpeg" "./public/images/jackal.jpg"}]
+    (-> (r/file (get accept-map accept-value "./public/images/pig_icon.png"))
+        (r/content-type accept-value)
+        (res))))
+
+(defn image
+  "Returns page containing an image based on sent Accept header."
+  [req res raise]
+  (let [accept-value (clojure.string/lower-case (get-in req [:headers "accept"]))]
+    (image-response accept-value res)))
+
+(defn image-svg
+  "Returns page containing a SVG image."
+  [req res raise]
+  (image-response "image/svg+xml" res))
+
+(defn image-png
+  "Returns page containing a PNG image."
+  [req res raise]
+  (image-response "image/png" res))
+
+(defn image-jpeg
+  "Returns page containing a JPEG image."
+  [req res raise]
+  (image-response "image/jpeg" res))
+
+(defn image-webp
+  "Returns page containing a WEBP image."
+  [req res raise]
+  (image-response "image/webp" res))
+
+;; FIXME consider with/without trailing slashes
 (def routes
   ["" {"/" {:get home}
        "/ip" {:get ip}
@@ -162,7 +200,12 @@
        "/response-headers" {:get response-headers}
        "/cookies" {:get cookies}
        "/cookies/set" {:get set-cookies}
-       "/cookies/delete" {:get delete-cookies}}])
+       "/cookies/delete" {:get delete-cookies}
+       "/image" {:get image}
+       "/image/png" {:get image-png}
+       "/image/webp" {:get image-webp}
+       "/image/svg" {:get image-svg}
+       "/image/jpeg" {:get image-jpeg}}])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
