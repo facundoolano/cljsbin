@@ -89,18 +89,40 @@
 (def patch "Returns PATCH data." body-data)
 (def delete "Returns DELETE data." body-data)
 
+;; TODO serve file helper, take path and ctype
 (defn encoding
   "Returns page containing UTF-8 data."
-  [req res next]
+  [req res raise]
   (-> (r/file "./public/UTF-8-demo.txt")
-   (r/content-type "text/html")
-   (res)))
+      (r/content-type "text/html")
+      (res)))
 
 (defn xml
   "Returns some XML."
-  [req res next]
+  [req res raise]
   (-> (r/file "./public/sample.xml")
       (r/content-type "application/xml")
+      (res)))
+
+(defn html
+  "Renders an HTML Page."
+  [req res raise]
+  (-> (r/file "./public/moby.html")
+      (r/content-type "text/html")
+      (res)))
+
+(defn robots
+  "Returns some robots.txt rules."
+  [req res raise]
+  (-> (r/file "./public/robots.txt")
+      (r/content-type "text/plain")
+      (res)))
+
+(defn deny
+  "Denied by robots.txt file."
+  [req res raise]
+  (-> (r/file "./public/deny.txt")
+      (r/content-type "text/plain")
       (res)))
 
 (defn status
@@ -108,7 +130,12 @@
   [req res raise]
   (let [status-code (js/parseInt (get-in req [:route-params :status]))]
     (if (integer? status-code)
-      (res {:body "" :status status-code})
+      (if (= 418 status-code)
+        (-> (r/file "./public/teapot.txt")
+            (r/header "x-more-info" "http://tools.ietf.org/html/rfc2324")
+            (r/status 418)
+            (res))
+        (res {:body "" :status status-code}))
       (raise (js/Error "Not a valid status code.")))))
 
 (defn response-headers
@@ -211,6 +238,9 @@
        "/delete" {:delete delete}
        "/encoding/utf8" {:get encoding}
        "/xml" {:get xml}
+       "/html" {:get html}
+       "/robots.txt" {:get robots}
+       "/deny" {:get deny}
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
        "/response-headers" {:get response-headers}
