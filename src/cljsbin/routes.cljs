@@ -54,7 +54,6 @@
   (json-handler (fn [req]
                   {:user-agent (get-in req [:headers "user-agent"])})))
 
-;; FIXME differnt headers: macchiato session,cache control, empty length and type
 (defn clean-headers
   "Return a sorted map of headers with the proper casing."
   [req]
@@ -124,6 +123,14 @@
   (-> (r/file "./public/deny.txt")
       (r/content-type "text/plain")
       (res)))
+
+(defn cache
+  "Returns 200 unless an If-Modified-Since or If-None-Match header is provided, when it returns a 304."
+  [req res raise]
+  (if (or (get-in req [:headers "if-modified-since"])
+          (get-in req [:headers "if-none-match"]))
+    (res (r/not-modified))
+    (get_ req res raise)))
 
 (defn status
   "Returns given HTTP Status code."
@@ -241,6 +248,7 @@
        "/html" {:get html}
        "/robots.txt" {:get robots}
        "/deny" {:get deny}
+       "/cache" {:get cache}
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
        "/response-headers" {:get response-headers}
