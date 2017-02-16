@@ -1,5 +1,6 @@
 (ns cljsbin.middleware
   (:require
+   [clojure.string]
    [macchiato.middleware.defaults :as defaults]
    [macchiato.util.request :as util]
    [cljs.nodejs :as node]))
@@ -33,6 +34,12 @@
     (.startsWith type "application/json")))
 
 ;; TODO error should be 400 if payload is badly formatted
+(defn parse-json
+  [body raise]
+  (if-not (clojure.string/blank? body)
+    (try (js->clj (js/JSON.parse body))
+         (catch js/Error e (raise e)))))
+
 (defn wrap-json-body
   "If the request has json content-type, attempt to parse the body and
   set it in the :json property of the request."
@@ -42,8 +49,7 @@
       (concat-body
        (:body request)
        (fn [body]
-         (if-let [json-body (try (js->clj (js/JSON.parse body))
-                                 (catch js/Error e (raise e)))]
+         (let [json-body (parse-json body raise)]
            (-> request
                (assoc :json json-body)
                (assoc :body body) ;; not sure why this is needed, should be set by the other mw
