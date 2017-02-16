@@ -2,6 +2,7 @@
   (:require
     [bidi.bidi :as bidi]
     [hiccups.runtime]
+    [clojure.string]
     [macchiato.util.response :as r]
     [macchiato.util.request :refer [request-url body-string]]
     [camel-snake-kebab.core :refer [->HTTP-Header-Case]])
@@ -132,6 +133,18 @@
     (res (r/not-modified))
     (get_ req res raise)))
 
+(defn cache-seconds
+  "Sets a Cache-Control header for n seconds."
+  [req res raise]
+  (let [seconds (js/parseInt (get-in req [:route-params :n]))
+        header-value (str "public, max-age=" seconds)
+        respond #(-> %
+                     (r/header "Cache-Control" header-value)
+                     (res))]
+    (if (integer? seconds)
+      (get_ req respond raise)
+      (raise (js/Error "Not a valid cache age.")))))
+
 (defn status
   "Returns given HTTP Status code."
   [req res raise]
@@ -249,6 +262,7 @@
        "/robots.txt" {:get robots}
        "/deny" {:get deny}
        "/cache" {:get cache}
+       ["/cache/" :n] {:get cache-seconds}
        ["/status/" :status] {:get status}
        ["/delay/" :n] {:get delay_}
        "/response-headers" {:get response-headers}
