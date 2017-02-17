@@ -38,7 +38,7 @@
        [:head]
        [:body
         [:form
-         {:action (bidi/path-for routes ep/post) :method "post"}
+         {:action (bidi/path-for routes :post) :method "post"}
          [:p [:label "Customer name: " [:input {:name "custname"}]]]
          [:p [:label "Telephone: " [:input {:name "custtel" :type "tel"}]]]
          [:p [:label "E-mail address: " [:input {:name "custemail" :type "email"}]]]
@@ -59,10 +59,31 @@
       (r/content-type "text/html")
       (res)))
 
+(defn links-page
+  "Generate a page with n links"
+  ([n index]
+   (html
+    [:head [:title "Links"]]
+    [:body
+     (mapcat #(if (= (or index "0") (str %))
+                (str " " % " ")
+                [[:a {:href (bidi/path-for routes :links :n n :index %)} (str % )] " "])
+             (range n))])))
+
+(defn links
+  "Returns page containing n HTML links."
+  [req res raise]
+  (-> (links-page (get-in req [:route-params :n]) (get-in req [:route-params :index]))
+      (r/ok)
+      (r/content-type "text/html")
+      (res)))
+
 ;; FIXME consider with/without trailing slashes
 (def html-routes
   {"/" {:get home}
-   "/forms/post" {:get form-post}})
+   "/forms/post" {:get form-post}
+   ["/links/" :n "/" :index] {:get (bidi/tag links :links)}
+   ["/links/" :n] {:get links}})
 
 (def routes ["" (merge html-routes ep/routes)])
 

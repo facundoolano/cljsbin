@@ -1,9 +1,10 @@
 (ns cljsbin.endpoints
   (:require
-    [clojure.string]
-    [macchiato.util.response :as r]
-    [macchiato.util.request :refer [request-url body-string]]
-    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]))
+   [clojure.string]
+   [bidi.bidi :as bidi]
+   [macchiato.util.response :as r]
+   [macchiato.util.request :refer [request-url body-string]]
+   [camel-snake-kebab.core :refer [->HTTP-Header-Case]]))
 
 ;; TODO make json responses sorted dicts, like httpbin does
 ;; TODO consider making this a proper middleware, i.e. give the handler req, res and raise
@@ -57,10 +58,10 @@
                    :origin (:remote-addr req)
                    :url (request-url req)})))
 
-(defn post "Returns POST data." [req res raise] (body-data req res raise))
-(defn put "Returns PUT data." [req res raise] (body-data req res raise))
-(defn patch "Returns PATCH data." [req res raise] (body-data req res raise))
-(defn delete "Returns DELETE data." [req res raise] (body-data req res raise))
+(def post "Returns POST data." body-data)
+(def put "Returns PUT data." body-data)
+(def patch "Returns PATCH data." body-data)
+(def delete "Returns DELETE data." body-data)
 
 ;; TODO serve file helper, take path and ctype
 (defn encoding
@@ -223,7 +224,7 @@
    "/user-agent" {:get user-agent}
    "/headers" {:get headers}
    "/get" {:get get_}
-   "/post" {:post post}
+   "/post" {:post (bidi/tag post :post)}
    "/put" {:put put}
    "/patch" {:patch patch}
    "/delete" {:delete delete}
