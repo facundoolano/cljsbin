@@ -8,7 +8,6 @@
    [cljsbin.middleware.defaults :refer [concat-body]]))
 
 ;;; REQUEST
-
 (defn json-request?
   "True if a request has application/json content-type."
   [request]
@@ -38,7 +37,6 @@
                (handler respond raise)))))
       (handler request respond raise))))
 
-
 ;;; RESPONSE
 (defn deep-sort-map
   "Recursively walk the structure converting maps in sorted maps."
@@ -46,15 +44,6 @@
   (walk/postwalk (fn [val]
                    (if (map? val) (into (sorted-map) val) val))
                  form))
-
-;; TODO remove when new version is published
-;; https://github.com/macchiato-framework/macchiato-core/pull/11
-(extend-protocol IHTTPResponseWriter
-  cljs.core/PersistentTreeMap
-
-  (-write-response [data node-server-response _]
-    (.write node-server-response (-> data clj->js js/JSON.stringify))
-    (.end node-server-response)))
 
 (defn wrap-json-response
   "Turn the payload into a proper response map if it isn't, set json content

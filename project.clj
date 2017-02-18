@@ -1,11 +1,11 @@
 (defproject cljsbin "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+  :description "httpbin implemented in ClojureScript"
   :url "http://example.com/FIXME"
   :dependencies [[bidi "2.0.16"]
                  [com.cemerick/piggieback "0.2.1"]
                  [com.taoensso/timbre "4.8.0"]
                  [hiccups "0.3.0"]
-                 [macchiato/core "0.1.3"]
+                 [macchiato/core "0.1.4"]
                  [macchiato/env "0.0.5"]
                  [mount "0.1.11"]
                  [org.clojure/clojure "1.8.0"]

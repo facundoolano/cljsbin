@@ -1,7 +1,7 @@
 {
   "private" : true,
   "name" : "cljsbin",
-  "description" : "FIXME: write this!",
+  "description" : "httpbin implemented in ClojureScript",
   "version" : "0.1.0-SNAPSHOT",
   "dependencies" : {
     "random-bytes" : "1.0.0",
