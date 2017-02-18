@@ -4,36 +4,56 @@
      [clojure.string :as string]
      [macchiato.util.response :as r]))
 
-;; TODO first create a single handler that implements the basic auth
-;; when we have it break into mw + handler
-
 (defn parse-basic
   "Decode Authorization header value and return a [user pass] sequence"
   [value]
   (let [encoded (second (string/split value #" "))
         decoded (base64/decodeString encoded)]
-    (println encoded decoded)
     (string/split decoded #":")))
 
 (defn respond-unauth
-  [res]
+  [req res]
   (-> (r/unauthorized "")
       (r/header "WWW-Authenticate" "Basic realm=\"fake realm\"")
       (res)))
 
-(defn basic-auth
-  "Challenges HTTPBasic Auth"
-  [req res raise]
-  (if-let [value (get-in req [:headers "authorization"])]
-    (let [[user pass] (parse-basic value)
-          expected-user (get-in req [:route-params :user])
-          expected-pass (get-in req [:route-params :pass])]
-      (if-not (and (= user expected-user) (= pass expected-pass))
-        (respond-unauth res)
-        (-> {:user user :authenticated true}
-            (r/ok)
-            (r/content-type "application/json")
-            (res))))
-    (respond-unauth res)))
+(defn wrap-basic-auth
+  "Middleware to handle Basic authentication."
+  ([handler authorize-fn] (wrap-basic-auth handler authorize-fn respond-unauth))
+  ([handler authorize-fn unauthorized]
+   (fn [req res raise]
+     (if-let [value (get-in req [:headers "authorization"])]
+       (let [[user pass] (parse-basic value)]
+         (if (or (not user) (not pass))
+           (unauthorized req res)
+           (if-let [user (authorize-fn req user pass raise)]
+             (handler (assoc req :user user) res raise)
+             (unauthorized req res))))
+       (unauthorized req res)))))
 
-(def routes {["/basic-auth/" :user "/" :pass] {:get basic-auth}})
+(defn auth-from-route-params
+  "Authenticate the user based on the user/pass provided in the route."
+  [req user pass raise]
+  (let [expected-user (get-in req [:route-params :user])
+        expected-pass (get-in req [:route-params :pass])]
+    (if (and (= user expected-user) (= pass expected-pass))
+      user)))
+
+;; FIXME this should use a json handler and probably be in the endpoints file
+(defn user-data-handler
+  [req res next]
+  (-> {:user (:user req) :authenticated true}
+      (r/ok)
+      (r/content-type "application/json")
+      (res)))
+
+(def basic-auth "Challenges HTTPBasic Auth."
+  (wrap-basic-auth user-data-handler auth-from-route-params))
+
+(def hidden-basic-auth "404'd BasicAuth."
+  (wrap-basic-auth user-data-handler
+                   auth-from-route-params
+                   (fn [req res] (res (r/not-found "")))))
+
+(def routes {["/basic-auth/" :user "/" :pass] {:get basic-auth}
+             ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}})
