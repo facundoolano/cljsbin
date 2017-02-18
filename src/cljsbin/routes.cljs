@@ -3,7 +3,8 @@
    [bidi.bidi :as bidi]
    [hiccups.runtime]
    [macchiato.util.response :as r]
-   [cljsbin.endpoints :as ep])
+   [cljsbin.endpoints :as ep]
+   [cljsbin.auth :as auth])
   (:require-macros
    [hiccups.core :refer [html]]))
 
@@ -78,14 +79,16 @@
       (r/content-type "text/html")
       (res)))
 
-;; FIXME consider with/without trailing slashes
+;; TODO consider with/without trailing slashes?
 (def html-routes
   {"/" {:get home}
    "/forms/post" {:get form-post}
    ["/links/" :n "/" :index] {:get (bidi/tag links :links)}
    ["/links/" :n] {:get links}})
 
-(def routes ["" (merge html-routes ep/routes)])
+(def routes ["" (merge html-routes
+                       ep/routes
+                       auth/routes)])
 
 (defn router [req res raise]
   (if-let [{:keys [handler route-params]} (bidi/match-route* routes (:uri req) req)]
