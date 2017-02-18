@@ -1,62 +1,79 @@
 (ns cljsbin.endpoints
   (:require
    [clojure.string]
+   [clojure.walk :as walk]
    [bidi.bidi :as bidi]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
+   [macchiato.http :refer [IHTTPResponseWriter]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]))
 
-;; TODO make json responses sorted dicts, like httpbin does
-;; TODO consider making this a proper middleware, i.e. give the handler req, res and raise
-;; wraping the response function instead calling it here
+;; TODO move this to a mw folder
+(defn deep-sort-map
+  "Recursively walk the structure converting maps in sorted maps."
+  [form]
+  (walk/postwalk (fn [val]
+                   (if (map? val) (into (sorted-map) val) val))
+                 form))
+
+;; TODO remove when enew version is published
+;; https://github.com/macchiato-framework/macchiato-core/pull/11
+(extend-protocol IHTTPResponseWriter
+  cljs.core/PersistentTreeMap
+
+  (-write-response [data node-server-response _]
+    (.write node-server-response (-> data clj->js js/JSON.stringify))
+    (.end node-server-response)))
+
 (defn json-handler
   "Wrap a handler to set json content type, default to a 200 status and call res."
   [handler]
   (fn [req res raise]
-    (let [result (handler req)
-          result (if (r/response? result) result (r/ok result))]
-      (-> result
-          (r/content-type "application/json")
-          (res)))))
+    (let [respond (fn [result]
+                    (-> (if (r/response? result) result (r/ok result))
+                        (update-in [:body] deep-sort-map)
+                        (r/content-type "application/json")
+                        (res)))]
+      (handler req respond raise))))
 
 (def ip
   "Returns Origin IP."
-  (json-handler (fn [req]
-                  {:origin (:remote-addr req)})))
+  (json-handler (fn [req res raise]
+                  (res {:origin (:remote-addr req)}))))
 
 (def user-agent
   "Returns user-agent."
-  (json-handler (fn [req]
-                  {:user-agent (get-in req [:headers "user-agent"])})))
+  (json-handler (fn [req res raise]
+                  (res {:user-agent (get-in req [:headers "user-agent"])}))))
 
 (defn clean-headers
   "Return a sorted map of headers with the proper casing."
   [req]
   (->> (:headers req)
        (map (fn [[k v]] [(->HTTP-Header-Case k) v]))
-       (into (sorted-map))))
+       (into {})))
 
 (def headers "Returns header dict."
-  (json-handler (fn [req]
-                  {:headers (clean-headers req)})))
+  (json-handler (fn [req res raise]
+                  (res {:headers (clean-headers req)}))))
 
 (def get_ "Returns GET data."
-  (json-handler (fn [req]
-                  {:args (:params req)
-                   :headers (clean-headers req)
-                   :origin (:remote-addr req)
-                   :url (request-url req)})))
+  (json-handler (fn [req res raise]
+                  (res {:args (:params req)
+                        :headers (clean-headers req)
+                        :origin (:remote-addr req)
+                        :url (request-url req)}))))
 
 (def body-data "Common handler for post, put, patch and delete routes."
-  (json-handler (fn [req]
-                  {:args (:query-params req)
-                   :data (:body req)
-                   :files {} ;; FIXME process files when present
-                   :form (:form-params req)
-                   :headers (clean-headers req)
-                   :json (:json req)
-                   :origin (:remote-addr req)
-                   :url (request-url req)})))
+  (json-handler (fn [req res raise]
+                  (res {:args (:query-params req)
+                        :data (:body req)
+                        :files {} ;; FIXME process files when present
+                        :form (:form-params req)
+                        :headers (clean-headers req)
+                        :json (:json req)
+                        :origin (:remote-addr req)
+                        :url (request-url req)}))))
 
 (def post "Returns POST data." body-data)
 (def put "Returns PUT data." body-data)
@@ -148,7 +165,8 @@
   (into {} (map (fn [[k v]] [k (:value v)]) cookies)))
 
 (def cookies "Return cookie data."
-  (json-handler (fn [req] {:cookies (flatten-cookies (:cookies req))})))
+  (json-handler (fn [req res raise]
+                  (res {:cookies (flatten-cookies (:cookies req))}))))
 
 ;; FIXME should use json-handler once its adapted
 (defn set-cookies
