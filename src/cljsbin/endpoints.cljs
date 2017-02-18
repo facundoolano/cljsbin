@@ -1,51 +1,22 @@
 (ns cljsbin.endpoints
   (:require
    [clojure.string]
-   [clojure.walk :as walk]
    [bidi.bidi :as bidi]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
-   [macchiato.http :refer [IHTTPResponseWriter]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
+   [cljsbin.middleware.json :refer [wrap-json-response]]
    [cljsbin.middleware.auth :refer [wrap-basic-auth]]))
-
-;; TODO move this to a mw folder
-(defn deep-sort-map
-  "Recursively walk the structure converting maps in sorted maps."
-  [form]
-  (walk/postwalk (fn [val]
-                   (if (map? val) (into (sorted-map) val) val))
-                 form))
-
-;; TODO remove when enew version is published
-;; https://github.com/macchiato-framework/macchiato-core/pull/11
-(extend-protocol IHTTPResponseWriter
-  cljs.core/PersistentTreeMap
-
-  (-write-response [data node-server-response _]
-    (.write node-server-response (-> data clj->js js/JSON.stringify))
-    (.end node-server-response)))
-
-(defn json-handler
-  "Wrap a handler to set json content type, default to a 200 status and call res."
-  [handler]
-  (fn [req res raise]
-    (let [respond (fn [result]
-                    (-> (if (r/response? result) result (r/ok result))
-                        (update-in [:body] deep-sort-map)
-                        (r/content-type "application/json")
-                        (res)))]
-      (handler req respond raise))))
 
 (def ip
   "Returns Origin IP."
-  (json-handler (fn [req res raise]
-                  (res {:origin (:remote-addr req)}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:origin (:remote-addr req)}))))
 
 (def user-agent
   "Returns user-agent."
-  (json-handler (fn [req res raise]
-                  (res {:user-agent (get-in req [:headers "user-agent"])}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:user-agent (get-in req [:headers "user-agent"])}))))
 
 (defn clean-headers
   "Return a sorted map of headers with the proper casing."
@@ -55,26 +26,26 @@
        (into {})))
 
 (def headers "Returns header dict."
-  (json-handler (fn [req res raise]
-                  (res {:headers (clean-headers req)}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:headers (clean-headers req)}))))
 
 (def get_ "Returns GET data."
-  (json-handler (fn [req res raise]
-                  (res {:args (:params req)
-                        :headers (clean-headers req)
-                        :origin (:remote-addr req)
-                        :url (request-url req)}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:args (:params req)
+                              :headers (clean-headers req)
+                              :origin (:remote-addr req)
+                              :url (request-url req)}))))
 
 (def body-data "Common handler for post, put, patch and delete routes."
-  (json-handler (fn [req res raise]
-                  (res {:args (:query-params req)
-                        :data (:body req)
-                        :files {} ;; FIXME process files when present
-                        :form (:form-params req)
-                        :headers (clean-headers req)
-                        :json (:json req)
-                        :origin (:remote-addr req)
-                        :url (request-url req)}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:args (:query-params req)
+                              :data (:body req)
+                              :files {} ;; FIXME process files when present
+                              :form (:form-params req)
+                              :headers (clean-headers req)
+                              :json (:json req)
+                              :origin (:remote-addr req)
+                              :url (request-url req)}))))
 
 (def post "Returns POST data." body-data)
 (def put "Returns PUT data." body-data)
@@ -166,26 +137,26 @@
   (into {} (map (fn [[k v]] [k (:value v)]) cookies)))
 
 (def cookies "Return cookie data."
-  (json-handler (fn [req res raise]
-                  (res {:cookies (flatten-cookies (:cookies req))}))))
+  (wrap-json-response (fn [req res raise]
+                        (res {:cookies (flatten-cookies (:cookies req))}))))
 
 (def set-cookies "Sets one or more simple cookies."
-  (json-handler (fn [req res raise]
-                  (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
-                                                 (:query-params req)))]
-                    (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
-                        (r/ok)
-                        (assoc :cookies cookie-map)
-                        (res))))))
+  (wrap-json-response (fn [req res raise]
+                        (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
+                                                       (:query-params req)))]
+                          (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
+                              (r/ok)
+                              (assoc :cookies cookie-map)
+                              (res))))))
 
 (def delete-cookies "Deletes one or more simple cookies."
-  (json-handler (fn[req res raise]
-                  (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
-                        remaining (apply dissoc (:cookies req) (keys remove-map))]
-                    (-> {:cookies (flatten-cookies remaining)}
-                        (r/ok)
-                        (assoc :cookies remove-map)
-                        (res))))))
+  (wrap-json-response (fn[req res raise]
+                        (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
+                              remaining (apply dissoc (:cookies req) (keys remove-map))]
+                          (-> {:cookies (flatten-cookies remaining)}
+                              (r/ok)
+                              (assoc :cookies remove-map)
+                              (res))))))
 
 (defn delay_
   "Delays responding for min(n, 10) seconds."
@@ -241,8 +212,8 @@
       user)))
 
 (def user-data-handler
-  (json-handler (fn [req res next]
-                  (res {:user (:user req) :authenticated true}))))
+  (wrap-json-response (fn [req res next]
+                        (res {:user (:user req) :authenticated true}))))
 
 (def basic-auth "Challenges HTTPBasic Auth."
   (wrap-basic-auth user-data-handler auth-from-route-params))
