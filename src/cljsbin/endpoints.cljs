@@ -6,7 +6,8 @@
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
    [macchiato.http :refer [IHTTPResponseWriter]]
-   [camel-snake-kebab.core :refer [->HTTP-Header-Case]]))
+   [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
+   [cljsbin.middleware.auth :refer [wrap-basic-auth]]))
 
 ;; TODO move this to a mw folder
 (defn deep-sort-map
@@ -168,29 +169,23 @@
   (json-handler (fn [req res raise]
                   (res {:cookies (flatten-cookies (:cookies req))}))))
 
-;; FIXME should use json-handler once its adapted
-(defn set-cookies
-  "Sets one or more simple cookies."
-  [req res raise]
-  (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
-                                 (:query-params req)))]
-    (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
-        (r/ok)
-        (r/content-type "application/json")
-        (assoc :cookies cookie-map)
-        (res))))
+(def set-cookies "Sets one or more simple cookies."
+  (json-handler (fn [req res raise]
+                  (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
+                                                 (:query-params req)))]
+                    (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
+                        (r/ok)
+                        (assoc :cookies cookie-map)
+                        (res))))))
 
-;; FIXME should use json-handler once its adapted
-(defn delete-cookies
-  "Deletes one or more simple cookies."
-  [req res raise]
-  (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
-        remaining (apply dissoc (:cookies req) (keys remove-map))]
-    (-> {:cookies (flatten-cookies remaining)}
-        (r/ok)
-        (r/content-type "application/json")
-        (assoc :cookies remove-map)
-        (res))))
+(def delete-cookies "Deletes one or more simple cookies."
+  (json-handler (fn[req res raise]
+                  (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
+                        remaining (apply dissoc (:cookies req) (keys remove-map))]
+                    (-> {:cookies (flatten-cookies remaining)}
+                        (r/ok)
+                        (assoc :cookies remove-map)
+                        (res))))))
 
 (defn delay_
   "Delays responding for min(n, 10) seconds."
@@ -237,6 +232,26 @@
   [req res raise]
   (image-response "image/webp" res))
 
+(defn auth-from-route-params
+  "Authenticate the user based on the user/pass provided in the route."
+  [req user pass raise]
+  (let [expected-user (get-in req [:route-params :user])
+        expected-pass (get-in req [:route-params :pass])]
+    (if (and (= user expected-user) (= pass expected-pass))
+      user)))
+
+(def user-data-handler
+  (json-handler (fn [req res next]
+                  (res {:user (:user req) :authenticated true}))))
+
+(def basic-auth "Challenges HTTPBasic Auth."
+  (wrap-basic-auth user-data-handler auth-from-route-params))
+
+(def hidden-basic-auth "404'd BasicAuth."
+  (wrap-basic-auth user-data-handler
+                   auth-from-route-params
+                   (fn [req res] (res (r/not-found "")))))
+
 (def routes
   {"/ip" {:get ip}
    "/user-agent" {:get user-agent}
@@ -263,4 +278,6 @@
    "/image/png" {:get image-png}
    "/image/webp" {:get image-webp}
    "/image/svg" {:get image-svg}
-   "/image/jpeg" {:get image-jpeg}})
+   "/image/jpeg" {:get image-jpeg}
+   ["/basic-auth/" :user "/" :pass] {:get basic-auth}
+   ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}})

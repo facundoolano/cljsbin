@@ -1,4 +1,4 @@
-(ns cljsbin.middleware
+(ns cljsbin.middleware.defaults
   (:require
    [clojure.string]
    [macchiato.middleware.defaults :as defaults]

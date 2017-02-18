@@ -1,7 +1,7 @@
 (ns cljsbin.core
   (:require
     [cljsbin.config :refer [env]]
-    [cljsbin.middleware :refer [wrap-defaults wrap-set-body wrap-json-body]]
+    [cljsbin.middleware.defaults :refer [wrap-defaults wrap-set-body wrap-json-body]]
     [cljsbin.routes :refer [router]]
     [macchiato.server :as http]
     [mount.core :as mount :refer [defstate]]
