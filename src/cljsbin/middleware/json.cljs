@@ -2,40 +2,9 @@
   (:require
    [clojure.string]
    [clojure.walk :as walk]
-   [macchiato.util.request :as util]
-   [macchiato.util.response :as r]
-   [macchiato.http :refer [IHTTPResponseWriter]]
-   [cljsbin.middleware.defaults :refer [concat-body]]))
+   [macchiato.util.response :as r]))
 
-;;; REQUEST
-(defn json-request?
-  "True if a request has application/json content-type."
-  [request]
-  (if-let [type (util/content-type request)]
-    (.startsWith type "application/json")))
-
-;; TODO error should be 400 if payload is badly formatted
-(defn parse-json
-  [body raise]
-  (if-not (clojure.string/blank? body)
-    (try (js->clj (js/JSON.parse body))
-         (catch js/Error e (raise e)))))
-
-(defn wrap-json-body
-  "If the request has json content-type, attempt to parse the body and
-  set it in the :json property of the request."
-  [handler]
-  (fn [request respond raise]
-    (if (json-request? request)
-      (concat-body
-       (:body request)
-       (fn [body]
-         (let [json-body (parse-json body raise)]
-           (-> request
-               (assoc :json json-body)
-               (assoc :body body) ;; not sure why this is needed, should be set by the other mw
-               (handler respond raise)))))
-      (handler request respond raise))))
+;; TODO maybe better tu turn into a r/json style util instead of a mw
 
 ;;; RESPONSE
 (defn deep-sort-map

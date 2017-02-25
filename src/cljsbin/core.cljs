@@ -1,12 +1,14 @@
 (ns cljsbin.core
   (:require
-    [cljsbin.config :refer [env]]
-    [cljsbin.middleware.defaults :refer [wrap-defaults wrap-set-body]]
-    [cljsbin.middleware.json :refer [wrap-json-body]]
-    [cljsbin.routes :refer [router]]
-    [macchiato.server :as http]
-    [mount.core :as mount :refer [defstate]]
-    [taoensso.timbre :refer-macros [log trace debug info warn error fatal]]))
+   [cljsbin.config :refer [env]]
+   [cljs.nodejs :as node]
+   [cljsbin.middleware.defaults :refer [wrap-defaults wrap-node-middleware]]
+   [cljsbin.routes :refer [router]]
+   [macchiato.server :as http]
+   [mount.core :as mount :refer [defstate]]
+   [taoensso.timbre :refer-macros [log trace debug info warn error fatal]]))
+
+(def body-parser (node/require "body-parser"))
 
 (defn app []
   (mount/start)
@@ -14,8 +16,8 @@
         port (or (some-> @env :port js/parseInt) 3000)]
     (http/start
      {:handler    (-> router
-                      (wrap-set-body)
-                      (wrap-json-body)
+                      (wrap-node-middleware (.text body-parser) :req-map {:body "body" :text "body"})
+                      (wrap-node-middleware (.json body-parser) :req-map {:body "body" :json "body"})
                       (wrap-defaults))
       :cookies {:signed? false} ;; for some reason this is needed to see cookie values
       :host       host
