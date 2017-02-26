@@ -2,8 +2,9 @@
   (:require
    [cljsbin.config :refer [env]]
    [cljs.nodejs :as node]
-   [cljsbin.middleware.defaults :refer [wrap-defaults wrap-node-middleware]]
+   [cljsbin.middleware.defaults :refer [wrap-defaults]]
    [cljsbin.routes :refer [router]]
+   [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [macchiato.server :as http]
    [mount.core :as mount :refer [defstate]]
    [taoensso.timbre :refer-macros [log trace debug info warn error fatal]]))
@@ -19,8 +20,10 @@
         port (or (some-> @env :port js/parseInt) 3000)]
     (http/start
      {:handler    (-> router
-                      (wrap-node-middleware (.text body-parser) :req-map {:body "body" :text "body"})
-                      (wrap-node-middleware (.json body-parser) :req-map {:body "body" :json "body"})
+                      (wrap-node-middleware (.text body-parser)
+                                            :req-map {:body "body" :text "body"})
+                      (wrap-node-middleware (.json body-parser)
+                                            :req-map {:body "body" :json "body"})
                       (wrap-defaults)
                       (wrap-node-middleware (favicon "public/clojure.ico"))
                       (wrap-node-middleware (morgan "combined"))

@@ -5,18 +5,21 @@
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
-   [cljsbin.middleware.json :refer [wrap-json-response]]
    [cljsbin.middleware.auth :refer [wrap-basic-auth]]))
 
-(def ip
+(defn ip
   "Returns Origin IP."
-  (wrap-json-response (fn [req res raise]
-                        (res {:origin (:remote-addr req)}))))
+  [req res raise]
+  (-> {:origin (:remote-addr req)}
+      (r/sorted-json)
+      (res)))
 
-(def user-agent
+(defn user-agent
   "Returns user-agent."
-  (wrap-json-response (fn [req res raise]
-                        (res {:user-agent (get-in req [:headers "user-agent"])}))))
+  [req res raise]
+  (-> {:user-agent (get-in req [:headers "user-agent"])}
+      (r/sorted-json)
+      (res)))
 
 (defn clean-headers
   "Return a sorted map of headers with the proper casing."
@@ -25,27 +28,36 @@
        (map (fn [[k v]] [(->HTTP-Header-Case k) v]))
        (into {})))
 
-(def headers "Returns header dict."
-  (wrap-json-response (fn [req res raise]
-                        (res {:headers (clean-headers req)}))))
+(defn headers
+  "Returns header dict."
+  [req res raise]
+  (-> {:headers (clean-headers req)}
+      (r/sorted-json)
+      (res)))
 
-(def get_ "Returns GET data."
-  (wrap-json-response (fn [req res raise]
-                        (res {:args (:params req)
-                              :headers (clean-headers req)
-                              :origin (:remote-addr req)
-                              :url (request-url req)}))))
+(defn get_
+  "Returns GET data."
+  [req res raise]
+  (-> {:args (:params req)
+       :headers (clean-headers req)
+       :origin (:remote-addr req)
+       :url (request-url req)}
+      (r/sorted-json)
+      (res)))
 
-(def body-data "Common handler for post, put, patch and delete routes."
-  (wrap-json-response (fn [req res raise]
-                        (res {:args (:query-params req)
-                              :data (:body req)
-                              :files {} ;; FIXME process files when present
-                              :form (:form-params req)
-                              :headers (clean-headers req)
-                              :json (:json req)
-                              :origin (:remote-addr req)
-                              :url (request-url req)}))))
+(defn body-data
+  "Common handler for post, put, patch and delete routes."
+  [req res raise]
+  (-> {:args (:query-params req)
+       :data (:body req)
+       :files {} ;; FIXME process files when present
+       :form (:form-params req)
+       :headers (clean-headers req)
+       :json (:json req)
+       :origin (:remote-addr req)
+       :url (request-url req)}
+      (r/sorted-json)
+      (res)))
 
 (def post "Returns POST data." body-data)
 (def put "Returns PUT data." body-data)
@@ -136,27 +148,32 @@
   [cookies]
   (into {} (map (fn [[k v]] [k (:value v)]) cookies)))
 
-(def cookies "Return cookie data."
-  (wrap-json-response (fn [req res raise]
-                        (res {:cookies (flatten-cookies (:cookies req))}))))
+(defn cookies
+  "Return cookie data."
+  [req res raise]
+  (-> {:cookies (flatten-cookies (:cookies req))}
+      (r/sorted-json)
+      (res)))
 
-(def set-cookies "Sets one or more simple cookies."
-  (wrap-json-response (fn [req res raise]
-                        (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
-                                                       (:query-params req)))]
-                          (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
-                              (r/ok)
-                              (assoc :cookies cookie-map)
-                              (res))))))
+(defn set-cookies
+  "Sets one or more simple cookies."
+  [req res raise]
+  (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
+                                 (:query-params req)))]
+    (-> {:cookies (flatten-cookies (merge (:cookies req) cookie-map))}
+        (r/sorted-json)
+        (assoc :cookies cookie-map)
+        (res))))
 
-(def delete-cookies "Deletes one or more simple cookies."
-  (wrap-json-response (fn[req res raise]
-                        (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
-                              remaining (apply dissoc (:cookies req) (keys remove-map))]
-                          (-> {:cookies (flatten-cookies remaining)}
-                              (r/ok)
-                              (assoc :cookies remove-map)
-                              (res))))))
+(defn delete-cookies
+  "Deletes one or more simple cookies."
+  [req res raise]
+  (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
+        remaining (apply dissoc (:cookies req) (keys remove-map))]
+    (-> {:cookies (flatten-cookies remaining)}
+        (r/sorted-json)
+        (assoc :cookies remove-map)
+        (res))))
 
 (defn delay_
   "Delays responding for min(n, 10) seconds."
@@ -211,9 +228,11 @@
     (if (and (= user expected-user) (= pass expected-pass))
       user)))
 
-(def user-data-handler
-  (wrap-json-response (fn [req res next]
-                        (res {:user (:user req) :authenticated true}))))
+(defn user-data-handler
+  [req res next]
+  (-> {:user (:user req) :authenticated true}
+      (r/sorted-json)
+      (res)))
 
 (def basic-auth "Challenges HTTPBasic Auth."
   (wrap-basic-auth user-data-handler auth-from-route-params))
