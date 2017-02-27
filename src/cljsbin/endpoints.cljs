@@ -244,32 +244,30 @@
                    auth-from-route-params
                    (fn [req res] (res (r/not-found "")))))
 
+(defn digest-auth-from-route-params
+  "Passport callback for digest"
+  [req username cb]
+  ;; kind of ugly, we get node req, not req itself
+  (let [segments (clojure.string/split (aget req "url") #"/")
+        [expected-user expected-pass] (take-last 2 segments)
+        user-match (= username expected-user)]
+    (cb nil (and user-match expected-user) expected-pass)))
+
 (def passport (node/require "passport"))
 (def DigestStrategy (.-DigestStrategy (node/require "passport-http")))
+(.use passport (DigestStrategy. (js-obj "passReqToCallback" true) digest-auth-from-route-params))
 
-(defn digest-auth
-  "Challenges HTTP Digest Auth."
-  ;; NOTE this is a total hack because we want to set the user/pass based on the route params
-  ;; the real scenario would use a static verify function independent of the req
-  ;; this could also be not ugly if the digest strategy supported passReqToCallback option:
-  ;; https://github.com/jaredhanson/passport-http/pull/66
-  ;; ugly but beats reimplemeting digest
-  [req res raise]
-  (let [verify (fn [username cb]
-                 (let [expected-user (get-in req [:route-params :user])
-                       expected-pass (get-in req [:route-params :pass])
-                       user-match (= username expected-user)]
-                   (cb nil (and user-match expected-user) expected-pass)))
-        strategy-name (:uri req)
-        strategy (DigestStrategy. verify)
-        passport-mw (do (.use passport strategy-name strategy)
-                        (.authenticate passport strategy-name (js-obj "session" false)))
-        wrapped (-> user-data-handler
-                    (wrap-node-middleware passport-mw :req-map {:user "user"}))]
-    (wrapped req res raise)
-    (.unuse passport strategy-name)))
+;; TODO maybe a more reusable digest middleware?
+;; create and use strategy here
+;; pass auth function
+(defn wrap-digest-auth
+  [handler]
+  (let [passport-mw (.authenticate passport "digest" (js-obj "session" false))]
+    (-> handler
+        (wrap-node-middleware passport-mw :req-map {:user "user"}))))
 
-;; FIXME unuse strategy after request done
+(def digest-auth "Challenges HTTP Digest Auth."
+  (wrap-digest-auth user-data-handler))
 
 (def routes
   {"/ip" {:get ip}
