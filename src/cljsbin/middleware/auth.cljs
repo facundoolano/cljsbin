@@ -4,14 +4,14 @@
    [clojure.string :as string]
    [macchiato.util.response :as r]))
 
-(defn parse-basic
+(defn- parse-basic
   "Decode Authorization header value and return a [user pass] sequence"
   [value]
   (let [encoded (second (string/split value #" "))
         decoded (base64/decodeString encoded)]
     (string/split decoded #":")))
 
-(defn respond-unauth
+(defn- respond-unauth
   [req res]
   (-> (r/unauthorized "")
       (r/header "WWW-Authenticate" "Basic realm=\"fake realm\"")

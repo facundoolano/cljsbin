@@ -11,6 +11,8 @@
     "etag": "1.7.0",
     "morgan": "^1.8.1",
     "multiparty": "4.1.2",
+    "passport": "^0.3.2",
+    "passport-http": "^0.3.0",
     "qs": "6.3.0",
     "random-bytes": "1.0.0",
     "response-time": "^2.3.2",

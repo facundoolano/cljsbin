@@ -1,9 +1,11 @@
 (ns cljsbin.endpoints
   (:require
    [clojure.string]
+   [cljs.nodejs :as node]
    [bidi.bidi :as bidi]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
+   [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
    [cljsbin.middleware.auth :refer [wrap-basic-auth]]))
 
@@ -242,6 +244,33 @@
                    auth-from-route-params
                    (fn [req res] (res (r/not-found "")))))
 
+(def passport (node/require "passport"))
+(def DigestStrategy (.-DigestStrategy (node/require "passport-http")))
+
+(defn digest-auth
+  "Challenges HTTP Digest Auth."
+  ;; NOTE this is a total hack because we want to set the user/pass based on the route params
+  ;; the real scenario would use a static verify function independent of the req
+  ;; this could also be not ugly if the digest strategy supported passReqToCallback option:
+  ;; https://github.com/jaredhanson/passport-http/pull/66
+  ;; ugly but beats reimplemeting digest
+  [req res raise]
+  (let [verify (fn [username cb]
+                 (let [expected-user (get-in req [:route-params :user])
+                       expected-pass (get-in req [:route-params :pass])
+                       user-match (= username expected-user)]
+                   (cb nil (and user-match expected-user) expected-pass)))
+        strategy-name (:uri req)
+        strategy (DigestStrategy. verify)
+        passport-mw (do (.use passport strategy-name strategy)
+                        (.authenticate passport strategy-name (js-obj "session" false)))
+        wrapped (-> user-data-handler
+                    (wrap-node-middleware passport-mw :req-map {:user "user"}))]
+    (wrapped req res raise)
+    (.unuse passport strategy-name)))
+
+;; FIXME unuse strategy after request done
+
 (def routes
   {"/ip" {:get ip}
    "/user-agent" {:get user-agent}
@@ -270,4 +299,5 @@
    "/image/svg" {:get image-svg}
    "/image/jpeg" {:get image-jpeg}
    ["/basic-auth/" :user "/" :pass] {:get basic-auth}
-   ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}})
+   ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}
+   ["/digest-auth/" :user "/" :pass] {:get digest-auth}})
