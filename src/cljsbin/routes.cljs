@@ -78,12 +78,54 @@
       (r/content-type "text/html")
       (res)))
 
+(defn redirect
+  "302 relative redirects n times."
+  [req res raise]
+  (let [times (js/parseInt (get-in req [:route-params :n]))]
+    (if (integer? times)
+      (-> (if (= 1 times)
+            (bidi/path-for routes ep/get_)
+            (bidi/path-for routes redirect :n (- times 1)))
+          (r/found)
+          (res))
+      (raise (js/Error "Not a valid cache age.")))))
+
+(defn- absolute-path
+  [req path]
+  (str (-> req :scheme name)
+       "://"
+       (get-in req [:headers "host"])
+       path))
+
+(defn absolute-redirect
+  "302 absolyte redirects n times."
+  [req res raise]
+  (let [times (js/parseInt (get-in req [:route-params :n]))]
+    (if (integer? times)
+      (->> (if (= 1 times)
+             (bidi/path-for routes ep/get_)
+             (bidi/path-for routes absolute-redirect :n (- times 1)))
+           (absolute-path req)
+           (r/found)
+           (res))
+      (raise (js/Error "Not a valid cache age.")))))
+
+(defn redirect-to
+  "302 Redirects to the given URL."
+  [req res raise]
+  (-> (get-in req [:query-params "url"])
+      (r/found)
+      (res)))
+
 ;; TODO consider with/without trailing slashes?
 (def html-routes
   {"/" {:get home}
    "/forms/post" {:get form-post}
    ["/links/" :n "/" :index] {:get (bidi/tag links :links)}
-   ["/links/" :n] {:get links}})
+   ["/links/" :n] {:get links}
+   ["/redirect/" :n] {:get redirect}
+   ["/absolute-redirect/" :n] {:get absolute-redirect}
+   ["/redirect-to"] {:get redirect-to}})
 
 (def routes ["" (merge html-routes
                        ep/routes)])
