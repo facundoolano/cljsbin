@@ -1,7 +1,9 @@
 (ns cljsbin.middleware.auth
   (:require
    [goog.crypt.base64 :as base64]
+   [cljs.nodejs :as node]
    [clojure.string :as string]
+   [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [macchiato.util.response :as r]))
 
 (defn- parse-basic
@@ -30,3 +32,17 @@
              (handler (assoc req :user user) res raise)
              (unauthorized req res))))
        (unauthorized req res)))))
+
+(def passport (node/require "passport"))
+(def DigestStrategy (.-DigestStrategy (node/require "passport-http")))
+
+(defn wrap-digest-auth
+  "Middleware to handle Digest authentication."
+  [handler authorize-fn]
+  ;; hack: use the function reference as the strategy name so no more than one strategy
+  ;; is registered in passport for the same function
+  (let [strategy (DigestStrategy. (js-obj "passReqToCallback" true) authorize-fn)
+        passport-mw (do (.use passport authorize-fn strategy)
+                        (.authenticate passport authorize-fn (js-obj "session" false)))]
+    (-> handler
+        (wrap-node-middleware passport-mw :req-map {:user "user"}))))

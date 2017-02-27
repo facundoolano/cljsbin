@@ -1,13 +1,11 @@
 (ns cljsbin.endpoints
   (:require
    [clojure.string]
-   [cljs.nodejs :as node]
    [bidi.bidi :as bidi]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
-   [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
-   [cljsbin.middleware.auth :refer [wrap-basic-auth]]))
+   [cljsbin.middleware.auth :refer [wrap-basic-auth wrap-digest-auth]]))
 
 (defn ip
   "Returns Origin IP."
@@ -253,21 +251,8 @@
         user-match (= username expected-user)]
     (cb nil (and user-match expected-user) expected-pass)))
 
-(def passport (node/require "passport"))
-(def DigestStrategy (.-DigestStrategy (node/require "passport-http")))
-(.use passport (DigestStrategy. (js-obj "passReqToCallback" true) digest-auth-from-route-params))
-
-;; TODO maybe a more reusable digest middleware?
-;; create and use strategy here
-;; pass auth function
-(defn wrap-digest-auth
-  [handler]
-  (let [passport-mw (.authenticate passport "digest" (js-obj "session" false))]
-    (-> handler
-        (wrap-node-middleware passport-mw :req-map {:user "user"}))))
-
 (def digest-auth "Challenges HTTP Digest Auth."
-  (wrap-digest-auth user-data-handler))
+  (wrap-digest-auth user-data-handler digest-auth-from-route-params))
 
 (def routes
   {"/ip" {:get ip}
