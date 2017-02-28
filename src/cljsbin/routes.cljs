@@ -53,10 +53,12 @@
           [:ul (map render-endpoint (second routes))]
           [:h2#DESCRIPTION "DESCRIPTION"]
           [:p
-           "Testing an HTTP Library can become difficult sometimes. "
-           [:a {:href "http://requestb.in"} "RequestBin"]
-           " is fantastic for testing POST requests, but doesn't let you control the response. This exists to cover all kinds of HTTP scenarios. Additional endpoints are being considered."]
-          [:p "All endpoint responses are JSON-encoded."]
+           "cljsbin is a ClojureScript clone of "
+           [:a {:href "https://httpbin.org"} "httpbin"]
+           " that runs on Node.js. It provides an API to test common HTTP features and operations (request methods, headers, redirects, etc.)."]
+          [:p "cljsbin is implemented using the "
+           [:a {:href "https://github.com/macchiato-framework/"} "Macchiato web framework"]
+           " for ClojureScript."]
           [:h2#EXAMPLES "EXAMPLES"]
           [:h3#-curl-http-cljsbin-org-ip "$ curl http://cljsbin.org/ip"]
           [:pre [:code "{\"origin\": \"24.127.96.129\"}\n"]]
@@ -68,9 +70,9 @@
           [:pre [:code "HTTP/1.1 418 I'M A TEAPOT\nServer: nginx/0.7.67\nDate: Mon, 13 Jun 2011 04:25:38 GMT\nConnection: close\nx-more-info: http://tools.ietf.org/html/rfc2324\nContent-Length: 135\n"]]
           [:h3#-curl-https-httpbin-org-get-show_env-1 "$ curl https://cljsbin.org/get?show_env=1"]
           [:pre [:code "{\n  \"headers\": {\n    \"Content-Length\": \"\",\n    \"Accept-Language\": \"en-US,en;q=0.8\",\n    \"Accept-Encoding\": \"gzip,deflate,sdch\",\n    \"X-Forwarded-Port\": \"443\",\n    \"X-Forwarded-For\": \"109.60.101.240\",\n    \"Host\": \"cljsbin.org\",\n    \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\",\n    \"User-Agent\": \"Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.83 Safari/535.11\",\n    \"X-Request-Start\": \"1350053933441\",\n    \"Accept-Charset\": \"ISO-8859-1,utf-8;q=0.7,*;q=0.3\",\n    \"Connection\": \"keep-alive\",\n    \"X-Forwarded-Proto\": \"https\",\n    \"Cookie\": \"_gauges_unique_day=1; _gauges_unique_month=1; _gauges_unique_year=1; _gauges_unique=1; _gauges_unique_hour=1\",\n    \"Content-Type\": \"\"\n  },\n  \"args\": {\n    \"show_env\": \"1\"\n  },\n  \"origin\": \"109.60.101.240\",\n  \"url\": \"http://cljsbin.org/get?show_env=1\"\n}\n"]]
-          ;; [:h2#Installing-and-running-from-PyPI "Installing and running from GitHub"]
-          ;; [:p "You can install httpbin as a library from PyPI and run it as a WSGI app.  For example, using Gunicorn:"]
-          ;; [:pre [:code.bash "$ pip install httpbin\n$ gunicorn httpbin:app\n"]]
+          [:h2#Installing-and-running "Installing and running from GitHub"]
+          [:p "You can install httpbin from the source at GitHub and run it with leiningen and node:"]
+          [:pre [:code.bash "$ git clone git@github.com:facundoolano/cljsbin.git .\n$ lein package\n$ npm start\n"]]
           [:h2#AUTHOR "AUTHOR"]
           [:p "Implemented by " [:a {:href "http://github.com/facundoolano"} "Facundo Olano"]" based on " [:a {:href "https://httpbin.org"} "httpbin.org"]  "."]
           [:h2#SEE-ALSO "SEE ALSO"]
