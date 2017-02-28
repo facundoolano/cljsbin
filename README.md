@@ -1,7 +1,7 @@
 ## cljsbin - HTTP Request & Response Service
 
 cljsbin is a ClojureScript clone of [httpbin](https://httpbin.org/) that
-runs on Node.js. It uses the (Macchiato web framework)[https://github.com/macchiato-framework/].
+runs on Node.js. It uses the [Macchiato web framework](https://github.com/macchiato-framework/).
 
 ### Prequisites
 

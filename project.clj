@@ -1,5 +1,4 @@
 (defproject cljsbin "0.1.0-SNAPSHOT"
-  :main "target/release/cljsbin.js"
   :description "httpbin implemented in ClojureScript"
   :url "http://example.com/FIXME"
   :dependencies [[bidi "2.0.16"]
@@ -12,6 +11,7 @@
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.456"]
                  [camel-snake-kebab "0.4.0"]]
+  :main "target/release/cljsbin.js"
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :plugins [[lein-doo "0.1.7"]
             [macchiato/lein-npm "0.6.2"]
