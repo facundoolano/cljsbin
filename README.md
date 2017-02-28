@@ -48,19 +48,19 @@ for ClojureScript.
 
 ## Examples
 
-### $ curl http://cljsbin.org/ip
+### GET /ip
 
 ``` json
 {"origin": "24.127.96.129"}
 ```
 
-### $ curl http://cljsbin.org/user-agent
+### GET /user-agent
 
 ``` json
 {"user-agent": "curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3"}
 ```
 
-### $ curl http://cljsbin.org/get
+### GET /get
 
 ``` json
 {
@@ -78,7 +78,7 @@ for ClojureScript.
 }
 ```
 
-### $ curl -I http://cljsbin.org/status/418
+### GET /status/418
 
 ``` http
 HTTP/1.1 418 I'M A TEAPOT
@@ -87,34 +87,6 @@ Date: Mon, 13 Jun 2011 04:25:38 GMT
 Connection: close
 x-more-info: http://tools.ietf.org/html/rfc2324
 Content-Length: 135
-```
-
-### $ curl https://cljsbin.org/get?show_env=1
-
-``` json
-{
-  "headers": {
-    "Content-Length": "",
-    "Accept-Language": "en-US,en;q=0.8",
-    "Accept-Encoding": "gzip,deflate,sdch",
-    "X-Forwarded-Port": "443",
-    "X-Forwarded-For": "109.60.101.240",
-    "Host": "cljsbin.org",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "User-Agent": "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.83 Safari/535.11",
-    "X-Request-Start": "1350053933441",
-    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
-    "Connection": "keep-alive",
-    "X-Forwarded-Proto": "https",
-    "Cookie": "_gauges_unique_day=1; _gauges_unique_month=1; _gauges_unique_year=1; _gauges_unique=1; _gauges_unique_hour=1",
-    "Content-Type": ""
-  },
-  "args": {
-    "show_env": "1"
-  },
-  "origin": "109.60.101.240",
-  "url": "http://cljsbin.org/get?show_env=1"
-}
 ```
 
 ## Building and running
