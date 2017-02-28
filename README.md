@@ -1,4 +1,4 @@
-## cljsbin - HTTP Request & Response Service
+# cljsbin - HTTP Request & Response Service
 
 cljsbin is a ClojureScript clone of [httpbin](https://httpbin.org/) that
 runs on Node.js. It provides an API to test common HTTP features and operations
@@ -6,6 +6,114 @@ runs on Node.js. It provides an API to test common HTTP features and operations
 
 cljsbin is implemented using the [Macchiato web framework](https://github.com/macchiato-framework/)
 for ClojureScript.
+
+## Endpoints
+
+* `/` home page.
+* `/ip` Returns Origin IP.
+* `/user-agent` Returns user-agent.
+* `/headers` Returns header dict.
+* `/get` Returns GET data.
+* `/post` Returns POST data.
+* `/put` Returns PUT data.
+* `/patch` Returns PATCH data.
+* `/delete` Returns DELETE data.
+* `/forms/post` HTML form that submits to /post
+* `/status/:status` Returns given HTTP Status code.
+* `/response-headers` Returns given response headers.
+* `/cookies Return` cookie data.
+* `/cookies/set?name=value` Sets one or more simple cookies.
+* `/cookies/delete?name` Deletes one or more simple cookies.
+* `/cache` Returns 200 unless an If-Modified-Since or If-None-Match header is provided, when it returns a 304.
+* `/cache/:n` Sets a Cache-Control header for n seconds.
+* `/delay/:n` Delays responding for min(n, 10) seconds.
+* `/redirect/:n` 302 relative redirects n times.
+* `/absolute-redirect/:n` 302 absolyte redirects n times.
+* `/redirect-to?url=foo` 302 Redirects to the given URL.
+* `/basic-auth/:user/:pass` Challenges HTTPBasic Auth.
+* `/hidden-basic-auth/:user/:pass` 404'd BasicAuth.
+* `/digest-auth/:user/:pass` Challenges HTTP Digest Auth.
+* `/links/:n` Returns page containing n HTML links.
+* `/encoding/utf8` Returns page containing UTF-8 data.
+* `/xml` Returns some XML.
+* `/html` Renders an HTML Page.
+* `/robots.txt` Returns some robots.txt rules.
+* `/deny` Denied by robots.txt file.
+* `/image` Returns page containing an image based on sent Accept header.
+* `/image/png` Returns page containing a PNG image.
+* `/image/webp` Returns page containing a WEBP image.
+* `/image/svg` Returns page containing a SVG image.
+* `/image/jpeg` Returns page containing a JPEG image.
+* `/compress` Returns gzip or deflate enconded data, based on the Accept-encoding header.
+
+## Examples
+
+### $ curl http://cljsbin.org/ip
+
+``` json
+{"origin": "24.127.96.129"}
+```
+
+### $ curl http://cljsbin.org/user-agent
+
+``` json
+{"user-agent": "curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3"}
+```
+
+### $ curl http://cljsbin.org/get
+
+``` json
+{
+   "args": {},
+   "headers": {
+      "Accept": "*/*",
+      "Connection": "close",
+      "Content-Length": "",
+      "Content-Type": "",
+      "Host": "cljsbin.org",
+      "User-Agent": "curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3"
+   },
+   "origin": "24.127.96.129",
+   "url": "http://cljsbin.org/get"
+}
+```
+
+### $ curl -I http://cljsbin.org/status/418
+
+``` http
+HTTP/1.1 418 I'M A TEAPOT
+Server: nginx/0.7.67
+Date: Mon, 13 Jun 2011 04:25:38 GMT
+Connection: close
+x-more-info: http://tools.ietf.org/html/rfc2324
+Content-Length: 135
+$ curl https://cljsbin.org/get?show_env=1
+{
+  "headers": {
+    "Content-Length": "",
+    "Accept-Language": "en-US,en;q=0.8",
+    "Accept-Encoding": "gzip,deflate,sdch",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-For": "109.60.101.240",
+    "Host": "cljsbin.org",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "User-Agent": "Mozilla/5.0 (X11; Linux i686) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.83 Safari/535.11",
+    "X-Request-Start": "1350053933441",
+    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.3",
+    "Connection": "keep-alive",
+    "X-Forwarded-Proto": "https",
+    "Cookie": "_gauges_unique_day=1; _gauges_unique_month=1; _gauges_unique_year=1; _gauges_unique=1; _gauges_unique_hour=1",
+    "Content-Type": ""
+  },
+  "args": {
+    "show_env": "1"
+  },
+  "origin": "109.60.101.240",
+  "url": "http://cljsbin.org/get?show_env=1"
+}
+```
+
+## Building and running
 
 ### Prequisites
 
