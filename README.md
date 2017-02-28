@@ -87,7 +87,11 @@ Date: Mon, 13 Jun 2011 04:25:38 GMT
 Connection: close
 x-more-info: http://tools.ietf.org/html/rfc2324
 Content-Length: 135
-$ curl https://cljsbin.org/get?show_env=1
+```
+
+### $ curl https://cljsbin.org/get?show_env=1
+
+``` json
 {
   "headers": {
     "Content-Length": "",
