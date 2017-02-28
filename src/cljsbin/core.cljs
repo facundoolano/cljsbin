@@ -2,7 +2,7 @@
   (:require
    [cljsbin.config :refer [env]]
    [cljs.nodejs :as node]
-   [cljsbin.middleware.defaults :refer [wrap-defaults]]
+   [cljsbin.middleware :refer [wrap-defaults]]
    [cljsbin.routes :refer [router]]
    [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [macchiato.server :as http]

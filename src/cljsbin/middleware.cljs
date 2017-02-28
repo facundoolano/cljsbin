@@ -1,4 +1,4 @@
-(ns cljsbin.middleware.defaults
+(ns cljsbin.middleware
   (:require
    [macchiato.middleware.defaults :as defaults]))
 

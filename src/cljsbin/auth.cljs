@@ -1,4 +1,5 @@
-(ns cljsbin.middleware.auth
+(ns cljsbin.auth
+  "Auth related middleware."
   (:require
    [goog.crypt.base64 :as base64]
    [cljs.nodejs :as node]

@@ -6,7 +6,7 @@
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
-   [cljsbin.middleware.auth :refer [wrap-basic-auth wrap-digest-auth]]))
+   [cljsbin.auth :refer [wrap-basic-auth wrap-digest-auth]]))
 
 (defn ip
   "Returns Origin IP."
@@ -51,7 +51,7 @@
   [req res raise]
   (-> {:args (:query-params req)
        :data (:body req)
-       :files {} ;; FIXME process files when present
+       ;; :files {} ;; FIXME process files when present
        :form (:form-params req)
        :headers (clean-headers req)
        :json (:json req)
