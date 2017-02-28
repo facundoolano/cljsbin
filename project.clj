@@ -1,4 +1,5 @@
 (defproject cljsbin "0.1.0-SNAPSHOT"
+  :main "target/release/cljsbin.js"
   :description "httpbin implemented in ClojureScript"
   :url "http://example.com/FIXME"
   :dependencies [[bidi "2.0.16"]
@@ -22,7 +23,8 @@
                        [passport "^0.3.2"]
                        [passport-http "facundoolano/passport-http"]
                        [response-time "^2.3.2"]
-                       [serve-favicon "^2.4.0"]]
+                       [serve-favicon "^2.4.0"]
+                       [body-parser "^1.16.1"]]
         :write-package-json true}
   :source-paths ["src" "target/classes"]
   :clean-targets ["target"]

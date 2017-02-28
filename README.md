@@ -1,10 +1,14 @@
-## Welcome to cljsbin
+## cljsbin - HTTP Request & Response Service
+
+cljsbin is a ClojureScript clone of [httpbin](https://httpbin.org/) that
+runs on Node.js. It uses the (Macchiato web framework)[https://github.com/macchiato-framework/].
 
 ### Prequisites
 
-[Node.js](https://nodejs.org/en/) needs to be installed to run the application.
+[Node.js](https://nodejs.org/) and [leiningen](http://leiningen.org/)
+need to be installed to run the application.
 
-### running in development mode
+### Running in development mode
 
 run the following command in the terminal to install NPM modules and start Figwheel:
 
@@ -18,14 +22,7 @@ run `node` in another terminal:
 node target/out/cljsbin.js
 ```
 
-#### configuring the REPL
-
-Once Figwheel and node are running, you can connect to the remote REPL at `localhost:7000`.
-
-Type `(cljs)` in the REPL to connect to Figwheel ClojureScript REPL.
-
-
-### building the release version
+### Building the release version
 
 ```
 lein package
