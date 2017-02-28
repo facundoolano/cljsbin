@@ -24,10 +24,10 @@
     "accepts": "1.3.3",
     "concat-stream": "1.5.2"
   },
+  "main": "target/release/cljsbin.js",
   "scripts": {
     "start": "node target/release/cljsbin.js"
   },
-  "main": "target/release/cljsbin.js",
   "directories": {
     "test": "test"
   },

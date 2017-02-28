@@ -11,7 +11,6 @@
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.456"]
                  [camel-snake-kebab "0.4.0"]]
-  :main "target/release/cljsbin.js"
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :plugins [[lein-doo "0.1.7"]
             [macchiato/lein-npm "0.6.2"]
@@ -31,7 +30,9 @@
   :target-path "target"
   :profiles
   {:dev
-   {:cljsbuild
+   {:npm {:package {:main "target/out/cljsbin.js"
+                    :scripts {:start "node target/out/cljsbin.js"}}}
+    :cljsbuild
     {:builds {:dev
               {:source-paths ["env/dev" "src"]
                :figwheel     true
@@ -63,7 +64,9 @@
                       :source-map    true}}}}
     :doo {:build "test"}}
    :release
-   {:cljsbuild
+   {:npm {:package {:main "target/release/cljsbin.js"
+                    :scripts {:start "node target/release/cljsbin.js"}}}
+    :cljsbuild
     {:builds
      {:release
       {:source-paths ["env/prod" "src"]
@@ -80,7 +83,7 @@
    "package" ["do"
               ["clean"]
               ["npm" "install"]
-              ["npm" "init" "-y"]
+              ["with-profile" "release" "npm" "init" "-y"]
               ["with-profile" "release" "cljsbuild" "once"]]
    "test" ["do"
            ["npm" "install"]

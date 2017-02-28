@@ -23,7 +23,7 @@ lein build
 run `node` in another terminal:
 
 ```
-node target/out/cljsbin.js
+npm start
 ```
 
 ### Building the release version
@@ -35,5 +35,5 @@ lein package
 Run the release version:
 
 ```
-node target/release/cljsbin.js
+npm start
 ```
