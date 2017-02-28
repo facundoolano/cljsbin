@@ -2,7 +2,6 @@
   (:require
    [clojure.string]
    [cljs.nodejs :as node]
-   [bidi.bidi :as bidi]
    [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
@@ -269,35 +268,3 @@
 (def compress
   "Returns gzip or deflate enconded data, based on the Accept-encoding header."
   (wrap-node-middleware compress-handler (compress-mw)))
-
-(def routes
-  {"/ip" {:get ip}
-   "/user-agent" {:get user-agent}
-   "/headers" {:get headers}
-   "/get" {:get get_}
-   "/post" {:post (bidi/tag post :post)}
-   "/put" {:put put}
-   "/patch" {:patch patch}
-   "/delete" {:delete delete}
-   "/encoding/utf8" {:get encoding}
-   "/xml" {:get xml}
-   "/html" {:get html}
-   "/robots.txt" {:get robots}
-   "/deny" {:get deny}
-   "/cache" {:get cache}
-   ["/cache/" :n] {:get cache-seconds}
-   ["/status/" :status] {:get status}
-   ["/delay/" :n] {:get delay_}
-   "/response-headers" {:get response-headers}
-   "/cookies" {:get cookies}
-   "/cookies/set" {:get set-cookies}
-   "/cookies/delete" {:get delete-cookies}
-   "/image" {:get image}
-   "/image/png" {:get image-png}
-   "/image/webp" {:get image-webp}
-   "/image/svg" {:get image-svg}
-   "/image/jpeg" {:get image-jpeg}
-   ["/basic-auth/" :user "/" :pass] {:get basic-auth}
-   ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}
-   ["/digest-auth/" :user "/" :pass] {:get digest-auth}
-   "/compress" {:get compress}})
