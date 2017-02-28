@@ -1,7 +1,9 @@
 (ns cljsbin.endpoints
   (:require
    [clojure.string]
+   [cljs.nodejs :as node]
    [bidi.bidi :as bidi]
+   [macchiato.middleware.node-middleware :refer [wrap-node-middleware]]
    [macchiato.util.response :as r]
    [macchiato.util.request :refer [request-url body-string]]
    [camel-snake-kebab.core :refer [->HTTP-Header-Case]]
@@ -254,6 +256,20 @@
 (def digest-auth "Challenges HTTP Digest Auth."
   (wrap-digest-auth user-data-handler digest-auth-from-route-params))
 
+(defn compress-handler [req res raise]
+  (-> {:args (:params req)
+       :headers (clean-headers req)
+       :origin (:remote-addr req)
+       :url (request-url req)}
+      (r/json)
+      (res)))
+
+(def compress-mw (node/require "compression"))
+
+(def compress
+  "Returns gzip or deflate enconded data, based on the Accept-encoding header."
+  (wrap-node-middleware compress-handler (compress-mw)))
+
 (def routes
   {"/ip" {:get ip}
    "/user-agent" {:get user-agent}
@@ -283,4 +299,5 @@
    "/image/jpeg" {:get image-jpeg}
    ["/basic-auth/" :user "/" :pass] {:get basic-auth}
    ["/hidden-basic-auth/" :user "/" :pass] {:get hidden-basic-auth}
-   ["/digest-auth/" :user "/" :pass] {:get digest-auth}})
+   ["/digest-auth/" :user "/" :pass] {:get digest-auth}
+   "/compress" {:get compress}})
