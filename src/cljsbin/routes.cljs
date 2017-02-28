@@ -15,19 +15,21 @@
 
 (defn render-endpoint
   "Take the route url and spec and render an index entry based on its metadata."
-  [[url {meta_ :meta get-handler :get no-display :no-display}]]
-  (if-not no-display
-    (let [display-path (if (string? url) url (apply str url))
-          display-url (str display-path (:display-query meta_))
-          params-reducer (fn [path segment]
-                           (str path (get-in meta_ [:href-params segment] segment)))
-          href-path (if (string? url) display-path (reduce params-reducer url))
-          href-url (str href-path (:href-query meta_))]
-      [:li
-       (if get-handler
-         [:a {:data-bare-link "true", :href href-url} [:code display-url]]
-         [:code display-url])
-       (str " " (:doc meta_))])))
+  [[url route]]
+  (let [{:keys [no-display href-query display-query href-params doc]}
+        (some route [:get :post :put :patch :delete])]
+    (if-not no-display
+      (let [display-path (if (string? url) url (apply str url))
+            display-url (str display-path display-query)
+            params-reducer (fn [path segment]
+                             (str path (get href-params segment segment)))
+            href-path (if (string? url) display-path (reduce params-reducer url))
+            href-url (str href-path href-query)]
+        [:li
+         (if (:get route)
+           [:a {:data-bare-link "true", :href href-url} [:code display-url]]
+           [:code display-url])
+         (str " " doc)]))))
 
 (defn home
   "This page."
