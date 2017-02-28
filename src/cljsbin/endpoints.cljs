@@ -109,7 +109,7 @@
     (res (r/not-modified))
     (get_ req res raise)))
 
-(defn cache-seconds
+(defn ^{:href-params {:n 60}} cache-seconds
   "Sets a Cache-Control header for n seconds."
   [req res raise]
   (let [seconds (js/parseInt (get-in req [:route-params :n]))
@@ -121,7 +121,7 @@
       (get_ req respond raise)
       (raise (js/Error "Not a valid cache age.")))))
 
-(defn status
+(defn ^{:href-params {:status 418}} status
   "Returns given HTTP Status code."
   [req res raise]
   (let [status-code (js/parseInt (get-in req [:route-params :status]))]
@@ -156,7 +156,9 @@
       (r/sorted-json)
       (res)))
 
-(defn set-cookies
+(defn ^{:display-query "?name=value"
+        :href-query "?k2=v2&k1=v1"}
+  set-cookies
   "Sets one or more simple cookies."
   [req res raise]
   (let [cookie-map (into {} (map (fn [[k value]] [k {:value value}])
@@ -166,7 +168,9 @@
         (assoc :cookies cookie-map)
         (res))))
 
-(defn delete-cookies
+(defn ^{:display-query "?name"
+        :href-query "?k2&k1"}
+  delete-cookies
   "Deletes one or more simple cookies."
   [req res raise]
   (let [remove-map (zipmap (keys (:query-params req)) (repeat {:value nil}))
@@ -176,7 +180,7 @@
         (assoc :cookies remove-map)
         (res))))
 
-(defn delay_
+(defn ^{:href-params {:n 60}} delay_
   "Delays responding for min(n, 10) seconds."
   [req res raise]
   (let [seconds (js/parseInt (get-in req [:route-params :n]))]
@@ -235,10 +239,12 @@
       (r/sorted-json)
       (res)))
 
-(def basic-auth "Challenges HTTPBasic Auth."
+(def ^{:href-params {:user "user" :pass "pass"}}
+  basic-auth "Challenges HTTPBasic Auth."
   (wrap-basic-auth user-data-handler auth-from-route-params))
 
-(def hidden-basic-auth "404'd BasicAuth."
+(def ^{:href-params {:user "user" :pass "pass"}}
+  hidden-basic-auth "404'd BasicAuth."
   (wrap-basic-auth user-data-handler
                    auth-from-route-params
                    (fn [req res] (res (r/not-found "")))))
@@ -252,7 +258,8 @@
         user-match (= username expected-user)]
     (cb nil (and user-match expected-user) expected-pass)))
 
-(def digest-auth "Challenges HTTP Digest Auth."
+(def ^{:href-params {:user "user" :pass "pass"}}
+  digest-auth "Challenges HTTP Digest Auth."
   (wrap-digest-auth user-data-handler digest-auth-from-route-params))
 
 (defn compress-handler [req res raise]

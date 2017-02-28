@@ -6,6 +6,6 @@
   [method sym & {:keys [bidi-tag]}]
   (if bidi-tag
     `{~method (bidi/tag ~sym ~bidi-tag)
-      :doc (:doc (meta (var ~sym)))}
+      :meta (meta (var ~sym))}
     `{~method ~sym
-      :doc (:doc (meta (var ~sym)))}))
+      :meta (meta (var ~sym))}))
