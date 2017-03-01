@@ -121,3 +121,27 @@ Run the release version:
 ```
 npm start
 ```
+
+### Build from the Dockerfile
+
+From a folder containing the [Dockerfile](Dockerfile) build the container:
+
+``` shell
+docker build -t cljsbin .
+```
+
+And the run it:
+
+``` shell
+docker run -p 3000:3000 cljsbin
+```
+
+### Deploy using [now](https://zeit.co/now/)
+
+From a folder containing the [Dockerfile](Dockerfile) build the container:
+
+``` shell
+now
+```
+
+Currently live [here](https://cljsbin-bkhgroqzwe.now.sh/).
