@@ -16,7 +16,7 @@
 
 (defn- respond-unauth
   [req res]
-  (-> (r/unauthorized "")
+  (-> (r/unauthorized)
       (r/header "WWW-Authenticate" "Basic realm=\"fake realm\"")
       (res)))
 

@@ -131,7 +131,7 @@
             (r/header "x-more-info" "http://tools.ietf.org/html/rfc2324")
             (r/status 418)
             (res))
-        (res {:body "" :status status-code}))
+        (res {:status status-code}))
       (raise (js/Error "Not a valid status code.")))))
 
 (defn response-headers
@@ -185,7 +185,7 @@
   [req res raise]
   (let [seconds (js/parseInt (get-in req [:route-params :n]))]
     (if (and (integer? seconds) (> seconds 0) (< seconds 10))
-      (js/setTimeout #(res (r/ok "")) (* seconds 1000))
+      (js/setTimeout #(res (r/ok)) (* seconds 1000))
       (raise (js/Error "Not a valid number of seconds.")))))
 
 (defn image-response
@@ -247,7 +247,7 @@
   hidden-basic-auth "404'd BasicAuth."
   (wrap-basic-auth user-data-handler
                    auth-from-route-params
-                   (fn [req res] (res (r/not-found "")))))
+                   (fn [req res] (res (r/not-found)))))
 
 (defn digest-auth-from-route-params
   "Passport callback for digest"
