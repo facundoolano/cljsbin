@@ -13,7 +13,7 @@
 
 (declare routes)
 
-(defn render-endpoint
+(defn- render-endpoint
   "Take the route url and spec and render an index entry based on its metadata."
   [[url route]]
   (let [{:keys [no-display href-query display-query href-params doc]}
@@ -30,6 +30,13 @@
            [:a {:data-bare-link "true", :href href-url} [:code display-url]]
            [:code display-url])
          (str " " doc)]))))
+
+(defn- absolute-path
+  [req path]
+  (str (-> req :scheme name)
+       "://"
+       (get-in req [:headers "host"])
+       path))
 
 (defn home
   "This page."
@@ -60,13 +67,13 @@
            [:a {:href "https://github.com/macchiato-framework/"} "Macchiato web framework"]
            " for ClojureScript."]
           [:h2#EXAMPLES "EXAMPLES"]
-          [:h3#-curl-http-cljsbin-org-ip "$ curl http://cljsbin.org/ip"]
+          [:h3#-curl-http-cljsbin-org-ip (str "$ curl "  (absolute-path req "/ip"))]
           [:pre [:code "{\"origin\": \"24.127.96.129\"}\n"]]
-          [:h3#-curl-http-cljsbin-org-user-agent "$ curl http://cljsbin.org/user-agent"]
+          [:h3#-curl-http-cljsbin-org-user-agent (str "$ curl "  (absolute-path req "/user-agent"))]
           [:pre [:code "{\"user-agent\": \"curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3\"}\n"]]
-          [:h3#-curl-http-cljsbin-org-get "$ curl http://cljsbin.org/get"]
-          [:pre [:code "{\n   \"args\": {},\n   \"headers\": {\n      \"Accept\": \"*/*\",\n      \"Connection\": \"close\",\n      \"Content-Length\": \"\",\n      \"Content-Type\": \"\",\n      \"Host\": \"cljsbin.org\",\n      \"User-Agent\": \"curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3\"\n   },\n   \"origin\": \"24.127.96.129\",\n   \"url\": \"http://cljsbin.org/get\"\n}\n"]]
-          [:h3#-curl-I-http-cljsbin-org-status-418 "$ curl -I http://cljsbin.org/status/418"]
+          [:h3#-curl-http-cljsbin-org-get (str "$ curl "  (absolute-path req "/get"))]
+          [:pre [:code (str "{\n   \"args\": {},\n   \"headers\": {\n      \"Accept\": \"*/*\",\n      \"Connection\": \"close\",\n      \"Content-Length\": \"\",\n      \"Content-Type\": \"\",\n      \"Host\": \"" (get-in req [:headers "host"]) "\",\n      \"User-Agent\": \"curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3\"\n   },\n   \"origin\": \"24.127.96.129\",\n   \"url\": \"" (absolute-path req "/get") "\"\n}\n")]]
+          [:h3#-curl-I-http-cljsbin-org-status-418 (str "$ curl -I " (absolute-path req "/status/418"))]
           [:pre [:code "HTTP/1.1 418 I'M A TEAPOT\nServer: nginx/0.7.67\nDate: Mon, 13 Jun 2011 04:25:38 GMT\nConnection: close\nx-more-info: http://tools.ietf.org/html/rfc2324\nContent-Length: 135\n"]]
           [:h2#Installing-and-running "Installing and running from GitHub"]
           [:p "You can install httpbin from the source at GitHub and run it with leiningen and node:"]
@@ -149,13 +156,6 @@
           (r/found)
           (res))
       (raise (js/Error "Not a valid cache age.")))))
-
-(defn- absolute-path
-  [req path]
-  (str (-> req :scheme name)
-       "://"
-       (get-in req [:headers "host"])
-       path))
 
 (defn ^{:href-params {:n 6}} absolute-redirect
   "302 absolyte redirects n times."
